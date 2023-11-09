@@ -5,20 +5,23 @@ using Microsoft.EntityFrameworkCore;
 using ToDoList.Data;
 using ToDoList.DTOs;
 using ToDoList.Entities;
+using ToDoList.Interfaces;
 
 namespace ToDoList.Controllers;
 
 public class AccountController : BaseApiController
 {
     private readonly DataContext _dataContext;
+    private readonly ITokenService _tokenService;
 
-    public AccountController(DataContext dataContext)
+    public AccountController(DataContext dataContext, ITokenService tokenService)
     {
         _dataContext = dataContext;
+        _tokenService = tokenService;
     }
     
     [HttpPost("register")]
-    public async Task<ActionResult<User>> Register(RegisterDto registerDto)
+    public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
     {
         if (await UserExists(registerDto.UserName))
             return BadRequest("Username is taken");
@@ -35,11 +38,15 @@ public class AccountController : BaseApiController
         _dataContext.Users.Add(user);
         await _dataContext.SaveChangesAsync();
 
-        return user;
+        return new UserDto
+        {
+            UserName = user.UserName,
+            Token = _tokenService.CreateToken(user)
+        };
     }
     
     [HttpPost("login")]
-    public async Task<ActionResult> Login(LoginDto loginDto)
+    public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
     {
         var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.UserName == loginDto.UserName);
         if (user == null)
@@ -55,7 +62,11 @@ public class AccountController : BaseApiController
                 return Unauthorized("Invalid password");
         }
 
-        return Ok("Successful login.");
+        return new UserDto
+        {
+            UserName = user.UserName,
+            Token = _tokenService.CreateToken(user)
+        };
     }
     
     private async Task<bool> UserExists(string userName)
