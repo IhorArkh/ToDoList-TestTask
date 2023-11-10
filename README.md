@@ -1,5 +1,8 @@
 # To-Do List
 
+## If you want to check how it works
+You can test all endpoints through the swagger(https://localhost:5001/swagger/index.html). Authorization also has been added there.
+
 ## Main purpose:
 
 A program for creating tasks.
