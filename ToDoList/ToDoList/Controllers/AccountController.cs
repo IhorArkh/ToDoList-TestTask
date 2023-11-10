@@ -19,22 +19,22 @@ public class AccountController : BaseApiController
         _dataContext = dataContext;
         _tokenService = tokenService;
     }
-    
+
     [HttpPost("register")]
     public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
     {
         if (await UserExists(registerDto.UserName))
             return BadRequest("Username is taken");
-        
+
         using var hmac = new HMACSHA512();
-        
+
         var user = new User
         {
             UserName = registerDto.UserName,
             PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password)),
             PasswordSalt = hmac.Key
         };
-        
+
         _dataContext.Users.Add(user);
         await _dataContext.SaveChangesAsync();
 
@@ -44,7 +44,7 @@ public class AccountController : BaseApiController
             Token = _tokenService.CreateToken(user)
         };
     }
-    
+
     [HttpPost("login")]
     public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
     {
@@ -68,9 +68,9 @@ public class AccountController : BaseApiController
             Token = _tokenService.CreateToken(user)
         };
     }
-    
+
     private async Task<bool> UserExists(string userName)
     {
-        return await _dataContext.Users.AnyAsync(u => u.UserName == userName.ToLower());
+        return await _dataContext.Users.AnyAsync(u => u.UserName.ToLower() == userName.ToLower());
     }
 }
