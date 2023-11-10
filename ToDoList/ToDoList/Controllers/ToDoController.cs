@@ -44,7 +44,7 @@ public class ToDoController : BaseApiController
 
     [Authorize]
     [HttpPost]
-    public async Task<ActionResult> CreateToDoItem(CreateToDoDto createToDoDto)
+    public async Task<ActionResult<ToDoDto>> CreateToDoItem(CreateToDoDto createToDoDto)
     {
         var userId = User.FindFirst("UserId")?.Value;
         if (userId == default)
@@ -60,12 +60,17 @@ public class ToDoController : BaseApiController
         _dataContext.ToDos.Add(toDoItem);
         await _dataContext.SaveChangesAsync();
 
-        return Ok();
+        return new ToDoDto
+        {
+            Id = toDoItem.Id,
+            ToDoName = toDoItem.ToDoName,
+            IsCompleted = toDoItem.IsCompleted
+        };
     }
 
     [Authorize]
     [HttpPut("{id}")]
-    public async Task<IActionResult> CompleteToDo(int id)
+    public async Task<ActionResult<ToDoDto>> CompleteToDo(int id)
     {
         var userId = User.FindFirst("UserId")?.Value;
         if (userId == default)
@@ -81,6 +86,11 @@ public class ToDoController : BaseApiController
         existingToDo.IsCompleted = true;
         await _dataContext.SaveChangesAsync();
 
-        return NoContent();
+        return new ToDoDto
+        {
+            Id = existingToDo.Id,
+            ToDoName = existingToDo.ToDoName,
+            IsCompleted = existingToDo.IsCompleted
+        };
     }
 }
